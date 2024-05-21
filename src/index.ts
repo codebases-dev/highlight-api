@@ -1,8 +1,9 @@
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { html, raw } from "hono/html";
 import { type HighlighterCore, getHighlighterCore, loadWasm } from "shiki/core";
 import js from "shiki/langs/javascript.mjs";
 import theme from "shiki/themes/github-dark-dimmed.mjs";
+import { codeSchema } from "./schema";
 
 // @ts-ignore
 await loadWasm(import("shiki/onig.wasm"));
@@ -11,42 +12,34 @@ let highlighter: HighlighterCore | undefined;
 
 const app = new Hono();
 
-app.post("/highlight", async (c) => {
-	try {
-		const { code, language } = await c.req.json();
-
-		if (!code) {
-			return c.json({ error: "`code` is required" }, 400);
+app.post(
+	"/highlight",
+	zValidator("json", codeSchema, (result, c) => {
+		if (!result.success) {
+			return c.json({ error: "Invalid input" }, 400);
 		}
+	}),
+	async (c) => {
+		try {
+			const { code, language } = c.req.valid("json");
 
-		if (typeof code !== "string") {
-			return c.json({ error: "`code` must be a string" }, 400);
-		}
+			if (!highlighter) {
+				highlighter = await getHighlighterCore({
+					themes: [theme],
+					langs: [js],
+				});
+			}
 
-		if (!language) {
-			return c.json({ error: "`language` is required" }, 400);
-		}
-
-		if (typeof language !== "string") {
-			return c.json({ error: "`language` must be a string" }, 400);
-		}
-
-		if (!highlighter) {
-			highlighter = await getHighlighterCore({
-				themes: [theme],
-				langs: [js],
+			return c.json({
+				html: highlighter.codeToHtml(code, {
+					theme: "github-dark-dimmed",
+					lang: language,
+				}),
 			});
+		} catch (error) {
+			return c.json({ error: "An unexpected error occurred" }, 500);
 		}
-
-		return c.json({
-			html: highlighter.codeToHtml(code, {
-				theme: "github-dark-dimmed",
-				lang: language,
-			}),
-		});
-	} catch (error) {
-		return c.json({ error: "An unexpected error occurred" }, 500);
-	}
-});
+	},
+);
 
 export default app;

@@ -1,19 +1,21 @@
 {
-	"name": "@codebases/highlight-api",
-	"private": true,
-	"scripts": {
-		"check": "biome check .",
-		"check:apply": "biome check --apply .",
-		"dev": "wrangler dev src/index.ts",
-		"deploy": "wrangler deploy --minify src/index.ts"
-	},
-	"dependencies": {
-		"@biomejs/biome": "1.7.3",
-		"hono": "^4.3.7"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20240403.0",
-		"shiki": "^1.5.2",
-		"wrangler": "^3.47.0"
-	}
+  "name": "@codebases/highlight-api",
+  "private": true,
+  "scripts": {
+    "check": "biome check .",
+    "check:apply": "biome check --apply .",
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy --minify src/index.ts"
+  },
+  "dependencies": {
+    "@biomejs/biome": "1.7.3",
+    "@hono/zod-validator": "^0.2.1",
+    "hono": "^4.3.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240403.0",
+    "shiki": "^1.5.2",
+    "wrangler": "^3.47.0"
+  }
 }
