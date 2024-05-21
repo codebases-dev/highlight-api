@@ -1,14 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { type HighlighterCore, getHighlighterCore, loadWasm } from "shiki/core";
-import js from "shiki/langs/javascript.mjs";
-import theme from "shiki/themes/github-dark-dimmed.mjs";
+import { getHighlighter } from "./highlighter";
 import { codeSchema, codesSchema } from "./schema";
-
-// @ts-ignore
-await loadWasm(import("shiki/onig.wasm"));
-
-let highlighter: HighlighterCore | undefined;
 
 const app = new Hono();
 
@@ -22,13 +15,7 @@ app.post(
 	async (c) => {
 		try {
 			const { code, language } = c.req.valid("json");
-
-			if (!highlighter) {
-				highlighter = await getHighlighterCore({
-					themes: [theme],
-					langs: [js],
-				});
-			}
+			const highlighter = await getHighlighter();
 
 			return c.json({
 				html: highlighter.codeToHtml(code, {
@@ -55,12 +42,7 @@ app.post(
 
 			const results = await Promise.all(
 				codes.map(async ({ code, language }, index) => {
-					if (!highlighter) {
-						highlighter = await getHighlighterCore({
-							themes: [theme],
-							langs: [js],
-						});
-					}
+					const highlighter = await getHighlighter();
 
 					return {
 						index,
