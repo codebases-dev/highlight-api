@@ -11,11 +11,24 @@ let highlighter: HighlighterCore | undefined;
 
 const app = new Hono();
 
-app.post("/", async (c) => {
+app.post("/highlight", async (c) => {
 	try {
-		const code = await c.req.text();
+		const { code, language } = await c.req.json();
+
 		if (!code) {
-			return c.json({ error: "Code is required" }, 400);
+			return c.json({ error: "`code` is required" }, 400);
+		}
+
+		if (typeof code !== "string") {
+			return c.json({ error: "`code` must be a string" }, 400);
+		}
+
+		if (!language) {
+			return c.json({ error: "`language` is required" }, 400);
+		}
+
+		if (typeof language !== "string") {
+			return c.json({ error: "`language` must be a string" }, 400);
 		}
 
 		if (!highlighter) {
@@ -25,14 +38,12 @@ app.post("/", async (c) => {
 			});
 		}
 
-		return c.html(
-			html`${raw(
-				highlighter.codeToHtml(code, {
-					theme: "github-dark-dimmed",
-					lang: "js",
-				}),
-			)}`,
-		);
+		return c.json({
+			html: highlighter.codeToHtml(code, {
+				theme: "github-dark-dimmed",
+				lang: language,
+			}),
+		});
 	} catch (error) {
 		return c.json({ error: "An unexpected error occurred" }, 500);
 	}
